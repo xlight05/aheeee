@@ -1,0 +1,11 @@
+.git
+.gitignore
+.dockerignore
+.logs
+.mcp-config.json
+Dockerfile
+README.md
+*.md
+.idea
+.vscode
+.DS_Store

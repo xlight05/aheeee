@@ -1,0 +1,30 @@
+{
+  "overview": "A single Go-based web service renders a server-side \"Hello, World!\" HTML page with optional name personalization, a favicon, health and status endpoints, and security headers. The minimal design uses one container exposing HTTP on port 9090, suitable for direct public access via Kubernetes ingress with HTTPS termination.",
+  "requirements": [
+    "Display 'Hello, World!' prominently on the main page with browser title 'Hello World'",
+    "Accept optional ?name= query parameter (max 50 chars), HTML-escape it, and render 'Hello, \u003cname\u003e!'",
+    "Default to 'Hello, World!' when no name is provided",
+    "Page must be responsive (desktop/tablet/mobile), use readable font, sufficient contrast, and include a favicon",
+    "Meet WCAG 2.1 Level A accessibility guidelines",
+    "Provide /health endpoint returning 200 within 500ms",
+    "Provide /status endpoint exposing uptime and version",
+    "Return a friendly 404 page for unknown routes",
+    "Log each request with timestamp, path, and status code",
+    "Set standard security headers (CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy)",
+    "Page load under 2 seconds; support 100+ concurrent users",
+    "Recover automatically on restart; target 99% uptime"
+  ],
+  "components": [
+    {
+      "name": "hello-web",
+      "componentType": "web-app",
+      "language": "Go (net/http)",
+      "dependsOn": [],
+      "entrypoint": "deployment/web-application",
+      "buildpack": "docker",
+      "appPath": "/hello-web",
+      "openAPISpec": "openapi: 3.0.3\ninfo:\n  title: Hello World Web\n  version: 1.0.0\n  description: Minimal Hello World web application\nservers:\n  - url: /\npaths:\n  /:\n    get:\n      summary: Render the Hello World page\n      parameters:\n        - in: query\n          name: name\n          required: false\n          schema:\n            type: string\n            maxLength: 50\n      responses:\n        '200':\n          description: HTML greeting page\n          content:\n            text/html:\n              schema:\n                type: string\n  /favicon.ico:\n    get:\n      summary: Favicon\n      responses:\n        '200':\n          description: Favicon image\n          content:\n            image/x-icon:\n              schema:\n                type: string\n                format: binary\n  /health:\n    get:\n      summary: Health check\n      responses:\n        '200':\n          description: Service healthy\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  status:\n                    type: string\n                    example: ok\n  /status:\n    get:\n      summary: Runtime status\n      responses:\n        '200':\n          description: Status info\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  uptimeSeconds:\n                    type: number\n                  version:\n                    type: string\n                  startedAt:\n                    type: string\n                    format: date-time\n",
+      "componentAgentInstructions": "Build a single Go web application using only the standard library (net/http, html/template, embed). Listen on port 9090. Endpoints:\n\n1. GET / — Render an HTML page using html/template (auto-escapes input). Read optional 'name' query param; if empty or whitespace, use 'World'. Truncate name to 50 characters. The template must include: \u003c!DOCTYPE html\u003e, \u003chtml lang=\"en\"\u003e, \u003cmeta charset=\"utf-8\"\u003e, \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\"\u003e, \u003ctitle\u003eHello World\u003c/title\u003e, link to /favicon.ico, inline CSS for centered flexbox layout (min-height:100vh), readable system font, high contrast (dark text on light bg, with @media prefers-color-scheme: dark fallback), and an \u003ch1\u003e showing 'Hello, {{.Name}}!'. Include a small footer showing version and uptime fetched at render time. Ensure semantic HTML (h1, main, footer) for screen readers and WCAG 2.1 A compliance.\n\n2. GET /favicon.ico — Serve an embedded favicon (use //go:embed favicon.ico). Provide a tiny placeholder .ico file in the repo.\n\n3. GET /health — Return JSON {\"status\":\"ok\"} with 200, complete in \u003c500ms.\n\n4. GET /status — Return JSON with uptimeSeconds (time since process start), version (from VERSION env var or '1.0.0'), startedAt (RFC3339).\n\n5. Any other path — Return HTTP 404 with a simple HTML 'Page not found' page including a link back to /.\n\nMiddleware: wrap all handlers with (a) request logger printing 'TIMESTAMP METHOD PATH STATUS DURATION' to stdout, and (b) security headers: Content-Security-Policy: default-src 'self'; X-Content-Type-Options: nosniff; X-Frame-Options: DENY; Referrer-Policy: no-referrer; Strict-Transport-Security: max-age=63072000.\n\nUse a Dockerfile with multi-stage build (golang:1.22-alpine builder, scratch or distroless final). EXPOSE 9090. Graceful shutdown on SIGTERM. No external dependencies required."
+    }
+  ]
+}

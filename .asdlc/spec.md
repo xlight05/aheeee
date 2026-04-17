@@ -7,7 +7,7 @@ The target users are developers, students, and operators who need a lightweight,
 The high-level approach is to provide a single web page accessible via a public URL that renders a "Hello, World!" greeting, with optional light personalization and basic health/status indicators to support operational use.
 
 # Capabilities
-
+sss
 ## Core Functionality
 - The system shall display the text "Hello, World!" prominently on the main page.
 - The greeting shall be visible within 2 seconds of page load under normal network conditions.

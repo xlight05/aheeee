@@ -1,0 +1,36 @@
+{
+  "strategy": "Bottom-Up",
+  "overview": "Only one component exists with no dependencies, so a single foundation phase is sufficient to deliver the entire system.",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Foundation Web Application",
+      "description": "Build the sole Go web application component that serves all endpoints.",
+      "components": [
+        {
+          "name": "hello-web",
+          "componentType": "web-app",
+          "language": "Go (net/http)",
+          "deployment": "Docker",
+          "responsibilities": [
+            "Render a server-side Hello World HTML page with optional name personalization",
+            "Serve an embedded favicon and a friendly 404 page for unknown routes",
+            "Expose /health and /status endpoints for liveness and runtime info",
+            "Apply request logging and security headers via middleware",
+            "Support graceful shutdown and recover automatically on restart"
+          ],
+          "architectureContext": "Standalone public-facing web-app exposed on port 9090 behind Kubernetes ingress with HTTPS termination. No upstream or downstream services; it directly serves end users.",
+          "keyConsiderations": [
+            "Use html/template for auto-escaping the name query parameter and truncate to 50 chars",
+            "Embed favicon via //go:embed; avoid external dependencies (stdlib only)",
+            "Ensure /health responds in \u003c500ms and handle 100+ concurrent users",
+            "Implement SIGTERM graceful shutdown and multi-stage Docker build (scratch/distroless)",
+            "Apply CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, HSTS headers on every response"
+          ],
+          "apiContract": "openapi: 3.0.3\ninfo:\n  title: Hello World Web\n  version: 1.0.0\n  description: Minimal Hello World web application\nservers:\n  - url: /\npaths:\n  /:\n    get:\n      summary: Render the Hello World page\n      parameters:\n        - in: query\n          name: name\n          required: false\n          schema:\n            type: string\n            maxLength: 50\n      responses:\n        '200':\n          description: HTML greeting page\n          content:\n            text/html:\n              schema:\n                type: string\n  /favicon.ico:\n    get:\n      summary: Favicon\n      responses:\n        '200':\n          description: Favicon image\n          content:\n            image/x-icon:\n              schema:\n                type: string\n                format: binary\n  /health:\n    get:\n      summary: Health check\n      responses:\n        '200':\n          description: Service healthy\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  status:\n                    type: string\n                    example: ok\n  /status:\n    get:\n      summary: Runtime status\n      responses:\n        '200':\n          description: Status info\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  uptimeSeconds:\n                    type: number\n                  version:\n                    type: string\n                  startedAt:\n                    type: string\n                    format: date-time\n",
+          "dependencies": []
+        }
+      ]
+    }
+  ]
+}

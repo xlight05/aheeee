@@ -1,0 +1,16 @@
+.logs/
+.mcp-config.json
+*.log
+
+# Go build artifacts
+/hello-web
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
